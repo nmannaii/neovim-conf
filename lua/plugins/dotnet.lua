@@ -10,40 +10,35 @@ return {
       })
     end,
   },
-  {
-    "seblyng/roslyn.nvim",
-    ft = "cs",
-    ---@module 'roslyn.config'
-    ---@type RoslynNvimConfig
-    opts = {
-      -- your configuration comes here; leave empty for default settings
-      filewatching = "roslyn",
-      lock_target = true,
-      choose_target = function(target)
-        return vim.iter(target):find(function(item)
-          if string.match(item, "PushManager.sln") then
-            return item
-          end
-        end)
-      end,
-    },
-  },
-
   -- {
-  --   "neovim/nvim-lspconfig",
-  --   opts = function()
-  --     require("lspconfig.configs").dotrush = {
-  --       default_config = {
-  --         cmd = { "/opt/DotnetRush/DotRush" }, -- Adjust path to the DotRush executable
-  --         filetypes = { "cs" },
-  --         root_dir = function(fname)
-  --           return vim.fn.getcwd()
-  --         end,
-  --       },
-  --     }
-  --     require("lspconfig").dotrush.setup({})
-  --   end,
+  --   "seblyng/roslyn.nvim",
+  --   ft = "cs",
+  --   ---@module 'roslyn.config'
+  --   ---@type RoslynNvimConfig
+  --   opts = {
+  --     -- your configuration comes here; leave empty for default settings
+  --     filewatching = "roslyn",
+  --     lock_target = true,
+  --     choose_target = function(target)
+  --       return vim.iter(target):find(function(item)
+  --         if string.match(item, "PushManager.sln") then
+  --           return item
+  --         end
+  --       end)
+  --     end,
+  --   },
   -- },
+
+  -- lazy.nvim
+  {
+    "GustavEikaas/easy-dotnet.nvim",
+    dependencies = { "nvim-lua/plenary.nvim", 'nvim-telescope/telescope.nvim', },
+    config = function()
+      require("easy-dotnet").setup({
+        debug = {}
+      })
+    end
+  },
   {
     "mfussenegger/nvim-dap",
     config = function()
@@ -53,9 +48,9 @@ return {
         command = "/usr/bin/tmux",
         args = {
           "new-window",
-          "-P",             -- print info
+          "-P",                 -- print info
           "-F", "#{window_id}", -- print only the ID
-          "-n", "debug",    -- temporary name
+          "-n", "debug",        -- temporary name
         },
       }
 

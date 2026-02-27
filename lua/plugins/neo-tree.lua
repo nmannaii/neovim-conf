@@ -17,7 +17,7 @@ return {
       desc = "Explorer NeoTree (cwd)",
     },
     { "<leader>e", "<leader>fe", desc = "Explorer NeoTree (Root Dir)", remap = true },
-    { "<leader>E", "<leader>fE", desc = "Explorer NeoTree (cwd)", remap = true },
+    { "<leader>E", "<leader>fE", desc = "Explorer NeoTree (cwd)",      remap = true },
     {
       "<leader>ge",
       function()
@@ -88,6 +88,7 @@ return {
           desc = "Open with System Application",
         },
         ["P"] = { "toggle_preview", config = { use_float = false } },
+        ["S"] = "shellcmd",
         ["R"] = "easy",
       },
     },
@@ -106,13 +107,31 @@ return {
       },
     },
     commands = {
+      ["shellcmd"] = function(state)
+        local node = state.tree:get_node()
+        if not node or node.type ~= "directory" then
+          vim.notify("Please select a directory", vim.log.levels.WARN)
+          return
+        end
+
+        vim.ui.input({
+          prompt = "Run command",
+          completion = "shellcmd",
+        }, function(cmd)
+          if not cmd or cmd == "" then return end
+          vim.fn.jobstart(cmd,
+            {
+              cwd = node.path,
+            })
+        end)
+      end,
       ["easy"] = function(state)
         local node = state.tree:get_node()
         local path = node.type == "directory" and node.path or vim.fs.dirname(node.path)
         require("easy-dotnet").create_new_item(path, function()
           require("neo-tree.sources.manager").refresh(state.name)
         end)
-      end,
+      end
     },
   },
   config = function(_, opts)
@@ -123,7 +142,7 @@ return {
     local events = require("neo-tree.events")
     opts.event_handlers = opts.event_handlers or {}
     vim.list_extend(opts.event_handlers, {
-      { event = events.FILE_MOVED, handler = on_move },
+      { event = events.FILE_MOVED,   handler = on_move },
       { event = events.FILE_RENAMED, handler = on_move },
     })
     require("neo-tree").setup(opts)

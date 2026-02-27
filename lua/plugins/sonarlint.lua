@@ -1,3 +1,5 @@
+if true then return {} end
+
 return {
   url = "https://gitlab.com/schrieveslaach/sonarlint.nvim",
   config = function()

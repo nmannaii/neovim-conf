@@ -11,39 +11,27 @@ vim.lsp.config("protols", {
 })
 vim.lsp.enable("protols")
 vim.lsp.enable("cssls")
+vim.lsp.enable("denols")
 
 -- angularls
-local root = '/home/najmedine-mannaii/.nvm/versions/node/v20.9.0/lib/node_modules'
-
+local root = '/home/najmedine-mannaii/.nvm/versions/node/v24.12.0/lib/node_modules'
+--
 local cmd = { "ngserver", "--stdio", "--tsProbeLocations", root .. '/typescript/lib/', "--ngProbeLocations", root ..
 '/@angular/language-server/bin/' }
 
 vim.lsp.config('angularls', {
-  cmd = cmd,
-  filetypes = { 'html', 'htmlangular', 'typescript' },
+  cmd = function(dispatchers, config)
+    return vim.lsp.rpc.start(cmd, dispatchers)
+  end,
+  -- filetypes = { 'html', 'htmlangular' },
   on_attach = function(client, bufnr)
-    -- 🚫 turn off features that clash with typescript-tools
-    client.server_capabilities.completionProvider = false
-    client.server_capabilities.hoverProvider = false
-    client.server_capabilities.signatureHelpProvider = false
-    client.server_capabilities.documentFormattingProvider = false
-    client.server_capabilities.documentRangeFormattingProvider = false
-    client.server_capabilities.renameProvider = false
-    client.server_capabilities.codeActionProvider = false
-    client.server_capabilities.semanticTokensProvider = nil
-    client.server_capabilities.inlayHintProvider = false
-
-    -- ✅ KEEP ONLY WHAT WE NEED:
-    -- - referencesProvider  → “Find All References” TS ↔ HTML
-    -- - definitionProvider  → “Go to definition” from HTML to TS
-    -- - workspaceSymbolProvider → optional
+    client.server_capabilities.renameProvider = false;
   end,
 })
 vim.lsp.enable("angularls")
 
 vim.lsp.config("roslyn", {
   on_attach = function()
-    print("This will run when the server attaches!")
   end,
   settings = {
     ["csharp|inlay_hints"] = {
@@ -98,7 +86,6 @@ vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(args)
     local client = vim.lsp.get_client_by_id(args.data.client_id)
     local bufnr = args.buf
-
     if client and (client.name == "roslyn" or client.name == "roslyn_ls") then
       vim.api.nvim_create_autocmd("InsertCharPre", {
         desc = "Roslyn: Trigger an auto insert on '/'.",
@@ -147,13 +134,49 @@ vim.api.nvim_create_autocmd("LspAttach", {
   end,
 })
 
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = { "cs" },
-  callback = function()
-    vim.api.nvim_clear_autocmds({
-      group = "noice_lsp_progress",
-      event = "LspProgress",
-      pattern = "*",
-    })
-  end,
+-- vim.api.nvim_create_autocmd("FileType", {
+--   pattern = { "cs" },
+--   callback = function()
+--     vim.api.nvim_clear_autocmds({
+--       group = "noice_lsp_progress",
+--       event = "LspProgress",
+--       pattern = "*",
+--     })
+--   end,
+-- })
+
+-- I always like to prefix my commands with JR so I can easily find them
+vim.api.nvim_create_user_command("CodeShot", function()
+  -- snag the file type from the buffer
+  local file_type = vim.bo.filetype
+
+  -- get the text from the visual selection as a table
+  local text = vim.fn.getline(vim.fn.getpos("'<")[2], vim.fn.getpos("'>")[2])
+
+  -- join it together into one string
+  local full_text = table.concat(text, "\n")
+
+  -- write the file to /tmp/freeze...probably could find a better place to put this so it's
+  -- cross platform, but it works for me ¯\_(ツ)_/¯
+  local file_path = "/tmp/freeze." .. file_type
+  local file = io.open(file_path, "w")
+  if file == nil then
+    print("could not open file")
+    return
+  end
+  file:write(full_text)
+  file:close()
+
+  -- call the freeze command with the file type we grabbed earlier
+  vim.fn.system("freeze " ..
+    file_path .. " -o /tmp/freeze.png --font.size 16 --line-height 1.4 --show-line-numbers --window --border.radius 8")
+
+  --  This is the tricky bit. Use apple script to copy the image to the clipboard
+  vim.fn.system("wl-copy < /tmp/freeze.png")
+
+  -- notify the user that the image has been copied to the clipboard
+  vim.notify("Image copied to clipboard", vim.log.levels.INFO)
+end, {
+  -- make sure the command is only available in visual mode
+  range = true,
 })
