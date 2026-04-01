@@ -58,12 +58,12 @@ return {
   --     colorscheme = "catppuccin",
   --   },
   -- },
-  -- {
-  --   "folke/tokyonight.nvim",
-  --   lazy = true,
-  --   opts = {
-  --     style = "moon",
-  --     transparent = true
-  --   },
-  -- }
+  {
+    "folke/tokyonight.nvim",
+    lazy = true,
+    opts = {
+      style = "moon",
+      transparent = true
+    },
+  }
 }

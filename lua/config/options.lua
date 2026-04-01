@@ -12,22 +12,23 @@ vim.lsp.config("protols", {
 vim.lsp.enable("protols")
 vim.lsp.enable("cssls")
 vim.lsp.enable("denols")
+-- vim.lsp.enable("ts_ls")
 
--- angularls
-local root = '/home/najmedine-mannaii/.nvm/versions/node/v24.12.0/lib/node_modules'
+-- -- angularls
+-- local root = '/home/najmedine-mannaii/.nvm/versions/node/v24.12.0/lib/node_modules'
+-- --
+-- local cmd = { "ngserver", "--stdio", "--tsProbeLocations", root .. '/typescript/lib/', "--ngProbeLocations", root ..
+-- '/@angular/language-server/bin/' }
 --
-local cmd = { "ngserver", "--stdio", "--tsProbeLocations", root .. '/typescript/lib/', "--ngProbeLocations", root ..
-'/@angular/language-server/bin/' }
-
-vim.lsp.config('angularls', {
-  cmd = function(dispatchers, config)
-    return vim.lsp.rpc.start(cmd, dispatchers)
-  end,
-  -- filetypes = { 'html', 'htmlangular' },
-  on_attach = function(client, bufnr)
-    client.server_capabilities.renameProvider = false;
-  end,
-})
+-- vim.lsp.config('angularls', {
+--   cmd = function(dispatchers, config)
+--     return vim.lsp.rpc.start(cmd, dispatchers)
+--   end,
+--   -- filetypes = { 'html', 'htmlangular' },
+--   on_attach = function(client, bufnr)
+--     client.server_capabilities.renameProvider = false;
+--   end,
+-- })
 vim.lsp.enable("angularls")
 
 vim.lsp.config("roslyn", {
