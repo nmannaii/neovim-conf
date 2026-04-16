@@ -2,14 +2,24 @@ return {
   {
     "mfussenegger/nvim-dap",
     recommended = true,
-    desc = "Debugging support. Requires language specific adapters to be configured. (see lang extras)",
+    desc = "Debugging support. Requires language specific adapters to be configured",
 
     dependencies = {
-      "igorlfs/nvim-dap-view",
+      {
+        "igorlfs/nvim-dap-view",
+        -- let the plugin lazy load itself
+        lazy = false,
+        version = "1.*",
+        ---@module 'dap-view'
+        ---@type dapview.Config
+        opts = {},
+      },
       -- virtual text for the debugger
       {
         "theHamsta/nvim-dap-virtual-text",
-        opts = {},
+        config = function()
+          require("nvim-dap-virtual-text").setup()
+        end,
       },
     },
 
