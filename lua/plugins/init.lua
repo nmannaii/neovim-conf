@@ -12,7 +12,7 @@ return {
       require "configs.lspconfig"
     end,
   },
-  -- Disable nvim-tree
+  --  Disable nvim-tree
   {
     "nvim-tree/nvim-tree.lua",
     enabled = false,
@@ -32,17 +32,4 @@ return {
     },
   },
   -- lazy.nvim
-  {
-    "GustavEikaas/easy-dotnet.nvim",
-    lazy = false,
-    dependencies = { "nvim-lua/plenary.nvim", "folke/snacks.nvim" },
-    config = function()
-      require("easy-dotnet").setup {
-        debug = {},
-        notifications = {
-          handler = false,
-        },
-      }
-    end,
-  },
 }

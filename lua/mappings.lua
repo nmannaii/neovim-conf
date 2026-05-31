@@ -7,10 +7,18 @@ map("i", "<C-l>", "<Right>", { desc = "move right" })
 map("i", "<C-j>", "<Down>", { desc = "move down" })
 map("i", "<C-k>", "<Up>", { desc = "move up" })
 
-map("n", "<C-h>", "<C-w>h", { desc = "switch window left" })
-map("n", "<C-l>", "<C-w>l", { desc = "switch window right" })
-map("n", "<C-j>", "<C-w>j", { desc = "switch window down" })
-map("n", "<C-k>", "<C-w>k", { desc = "switch window up" })
+-- Better window navigation
+map("n", "<C-h>", "<C-w>h", { desc = "Go to Left Window", remap = true })
+map("n", "<C-j>", "<C-w>j", { desc = "Go to Lower Window", remap = true })
+map("n", "<C-k>", "<C-w>k", { desc = "Go to Upper Window", remap = true })
+map("n", "<C-l>", "<C-w>l", { desc = "Go to Right Window", remap = true })
+
+-- Tmux
+map("n", "<C-h>", "<cmd>TmuxNavigateLeft<cr>")
+map("n", "<C-j>", "<cmd>TmuxNavigateDown<cr>")
+map("n", "<C-k>", "<cmd>TmuxNavigateUp<cr>")
+map("n", "<C-l>", "<cmd>TmuxNavigateRight<cr>")
+map("n", "<C-\\>", "<cmd>TmuxNavigatePrevious<cr>")
 
 map("n", "<Esc>", "<cmd>noh<CR>", { desc = "general clear highlights" })
 
@@ -24,6 +32,22 @@ end, { desc = "general format file" })
 
 -- global lsp mappings
 map("n", "<leader>x", vim.diagnostic.setloclist, { desc = "LSP diagnostic loclist" })
+
+-- File tree
+local function toggle_snacks_explorer()
+  -- Check if explorer is open
+  local explorer = Snacks.picker.get({ source = "explorer" })[1]
+
+  if explorer ~= nil then
+    -- Close it
+    Snacks.explorer.open();
+  else
+    -- Open and reveal current file
+    Snacks.explorer.reveal()
+  end
+end
+
+vim.keymap.set("n", "<leader>e", toggle_snacks_explorer, { desc = "Toggle Explorer" })
 
 -- tabufline
 if require("nvconfig").ui.tabufline.enabled then
@@ -40,34 +64,19 @@ if require("nvconfig").ui.tabufline.enabled then
   map("n", "<leader>bd", function()
     require("nvchad.tabufline").close_buffer()
   end, { desc = "buffer close" })
+
+  map("n", "<leader>bo", function()
+    Snacks.bufdelete.other()
+  end, { desc = "Delete Other Buffers" })
 end
 
 -- Comment
 map("n", "<leader>/", "gcc", { desc = "toggle comment", remap = true })
 map("v", "<leader>/", "gc", { desc = "toggle comment", remap = true })
 
--- telescope
-map("n", "<leader>/", "<cmd>Telescope live_grep<CR>", { desc = "telescope live grep" })
-map("n", "<leader>fb", "<cmd>Telescope buffers<CR>", { desc = "telescope find buffers" })
-map("n", "<leader>fh", "<cmd>Telescope help_tags<CR>", { desc = "telescope help page" })
-map("n", "<leader>fm", "<cmd>Telescope marks<CR>", { desc = "telescope find marks" })
-map("n", "<leader>fo", "<cmd>Telescope oldfiles<CR>", { desc = "telescope find oldfiles" })
-map("n", "<leader>fz", "<cmd>Telescope current_buffer_fuzzy_find<CR>", { desc = "telescope find in current buffer" })
-map("n", "<leader>cm", "<cmd>Telescope git_commits<CR>", { desc = "telescope git commits" })
-map("n", "<leader>gt", "<cmd>Telescope git_status<CR>", { desc = "telescope git status" })
-map("n", "<leader>pt", "<cmd>Telescope terms<CR>", { desc = "telescope pick hidden term" })
-
 map("n", "<leader>th", function()
   require("nvchad.themes").open()
 end, { desc = "telescope nvchad themes" })
-
-map("n", "<leader>ff", "<cmd>Telescope find_files<cr>", { desc = "telescope find files" })
-map(
-  "n",
-  "<leader>fa",
-  "<cmd>Telescope find_files follow=true no_ignore=true hidden=true<CR>",
-  { desc = "telescope find all files" }
-)
 
 -- terminal
 map("t", "<C-x>", "<C-\\><C-N>", { desc = "terminal escape terminal mode" })
@@ -100,13 +109,12 @@ map("n", "<leader>wK", "<cmd>WhichKey <CR>", { desc = "whichkey all keymaps" })
 map("n", "<leader>wk", function()
   vim.cmd("WhichKey " .. vim.fn.input "WhichKey: ")
 end, { desc = "whichkey query lookup" })
-local map = vim.keymap.set
 
 map("n", ";", ":", { desc = "CMD enter command mode" })
 map("i", "jk", "<ESC>")
 
 ----------- GIT
-local gs = require("gitsigns")
+local gs = require "gitsigns"
 -- Navigation
 map("n", "]h", gs.next_hunk, { desc = "Next Hunk" })
 map("n", "[h", gs.prev_hunk, { desc = "Prev Hunk" })
@@ -116,10 +124,10 @@ map("n", "<leader>gs", gs.stage_hunk, { desc = "Stage hunk" })
 map("n", "<leader>gr", gs.reset_hunk, { desc = "Reset hunk" })
 
 map("v", "<leader>gs", function() -- stage selected hunk
-  gs.stage_hunk({ vim.fn.line("."), vim.fn.line("v") })
+  gs.stage_hunk { vim.fn.line ".", vim.fn.line "v" }
 end, { desc = "Stage hunk" })
 map("v", "<leader>gr", function() -- reset selected hunk
-  gs.reset_hunk({ vim.fn.line("."), vim.fn.line("v") })
+  gs.reset_hunk { vim.fn.line ".", vim.fn.line "v" }
 end, { desc = "Reset hunk" })
 
 map("n", "<leader>gS", gs.stage_buffer, { desc = "Stage buffer" }) -- stage whole buffer
@@ -127,12 +135,12 @@ map("n", "<leader>gR", gs.reset_buffer, { desc = "Reset buffer" }) -- unstage wh
 map("n", "<leader>gu", gs.undo_stage_hunk, { desc = "Undo stage hunk" })
 map("n", "<leader>gp", gs.preview_hunk, { desc = "Preview hunk" })
 map("n", "<leader>gbl", function()
-  gs.blame_line({ full = true })
+  gs.blame_line { full = true }
 end, { desc = "Blame line" })
 map("n", "<leader>gB", gs.toggle_current_line_blame, { desc = "Toggle line blame" })
 map("n", "<leader>gD", gs.diffthis, { desc = "Diff this" })
 map("n", "<leader>gd", function()
-  gs.diffthis("~")
+  gs.diffthis "~"
 end, { desc = "Diff this ~" })
 
 -- Text object
@@ -143,7 +151,7 @@ map({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", { desc = "Gitsigns sel
 --- start => lazygit
 --- start => lazygit
 map({ "n" }, "<leader>gg", function()
-  vim.fn.jobstart({
+  vim.fn.jobstart {
     "tmux",
     "display-popup",
     "-d",
@@ -154,5 +162,45 @@ map({ "n" }, "<leader>gg", function()
     "95%",
     "-E",
     "lazygit",
-  })
+  }
 end, { desc = "Open lazy git" })
+
+-- Save / quit
+map({ "i", "x", "n", "s" }, "<C-s>", "<cmd>w<cr><esc>", { desc = "Save File" })
+map("n", "<leader>qq", "<cmd>qa<cr>", { desc = "Quit All" })
+
+-- Move Lines
+map("n", "<A-j>", "<cmd>execute 'move .+' . v:count1<cr>==", { desc = "Move Down" })
+map("n", "<A-k>", "<cmd>execute 'move .-' . (v:count1 + 1)<cr>==", { desc = "Move Up" })
+map("i", "<A-j>", "<esc><cmd>m .+1<cr>==gi", { desc = "Move Down" })
+map("i", "<A-k>", "<esc><cmd>m .-2<cr>==gi", { desc = "Move Up" })
+map("v", "<A-j>", ":<C-u>execute \"'<,'>move '>+\" . v:count1<cr>gv=gv", { desc = "Move Down" })
+map("v", "<A-k>", ":<C-u>execute \"'<,'>move '<-\" . (v:count1 + 1)<cr>gv=gv", { desc = "Move Up" })
+
+-- Telescope
+local telescope_builtin = require "telescope.builtin"
+local map = vim.keymap.set
+map("n", "<leader>sk", function()
+  telescope_builtin.keymaps()
+end, { desc = "[S]earch [K]eymaps" })
+map("n", "<leader>sc", function()
+  telescope_builtin.commands()
+end, { desc = "[S]earch [C]ommands" })
+map("n", "<leader>ff", function()
+  telescope_builtin.find_files()
+end, { desc = "[S]earch [F]iles" })
+map({ "n", "x" }, "<leader>sw", function()
+  telescope_builtin.grep_string()
+end, { desc = "[S]earch current [W]ord" })
+map("n", "<leader>/", function()
+  telescope_builtin.live_grep()
+end, { desc = "[S]earch by [G]rep" })
+map("n", "<leader>sd", function()
+  telescope_builtin.diagnostics()
+end, { desc = "[S]earch [D]iagnostics" })
+map("n", "<leader><leader>", function()
+  telescope_builtin.buffers()
+end, { desc = "[ ] Find existing buffers" })
+map("n", "<leader>sb", function()
+  telescope_builtin.current_buffer_fuzzy_find()
+end, { desc = "Current buffer fuzzy find" })
