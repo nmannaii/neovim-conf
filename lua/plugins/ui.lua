@@ -1,5 +1,14 @@
 return {
   {
+    "lukas-reineke/virt-column.nvim",
+    lazy = false,
+    opts = {
+      char = {"|"},
+      virtcolumn = "120",
+      highlight = {"NonText"}
+    },
+  },
+  {
     "folke/which-key.nvim",
     opts = {
       preset = "helix",
@@ -39,6 +48,8 @@ return {
   },
   {
     "nvimdev/dashboard-nvim",
+    event = "VimEnter",
+    lazy = false,
     config = function()
       vim.api.nvim_create_autocmd("VimEnter", {
         callback = function()

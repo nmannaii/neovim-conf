@@ -71,3 +71,10 @@ opt.sessionoptions = { "buffers", "curdir", "tabpages", "winsize", "help", "glob
 vim.g.markdown_recommended_style = 0
 -- use Neovim nightly branch
 vim.o.fillchars = 'eob: ,fold: ,foldopen:,foldsep: ,foldinner: ,foldclose:'
+
+vim.filetype.add({
+  pattern = {
+    [".*%.component%.html"] = "htmlangular", -- Sets the filetype to `htmlangular` if it matches the pattern
+  },
+})
+

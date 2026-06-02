@@ -6,7 +6,7 @@
 local M = {}
 
 M.base46 = {
-  theme = "onedark",
+  theme = "doomchad",
 
   -- hl_override = {
   -- 	Comment = { italic = true },
@@ -16,7 +16,7 @@ M.base46 = {
 
 M.ui = {
   tabufline = {
-    order = { "buffers", "tabs", "btns", "treeOffset" },
+    lazyload = false,
   },
 }
 

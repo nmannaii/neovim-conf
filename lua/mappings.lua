@@ -13,6 +13,11 @@ map("n", "<C-j>", "<C-w>j", { desc = "Go to Lower Window", remap = true })
 map("n", "<C-k>", "<C-w>k", { desc = "Go to Upper Window", remap = true })
 map("n", "<C-l>", "<C-w>l", { desc = "Go to Right Window", remap = true })
 
+-- Tab navigation 
+map("n", "<leader><tab>n", "<cmd>tabNext<cr>", { desc = "Next tab" })
+map("n", "<leader><tab>p", "<cmd>tabprevious<cr>", { desc = "Previous tab" })
+map("n", "<leader><tab>q", "<cmd>tabclose<cr>", { desc = "Close tab" })
+
 -- Tmux
 map("n", "<C-h>", "<cmd>TmuxNavigateLeft<cr>")
 map("n", "<C-j>", "<cmd>TmuxNavigateDown<cr>")
@@ -22,6 +27,21 @@ map("n", "<C-\\>", "<cmd>TmuxNavigatePrevious<cr>")
 
 map("n", "<Esc>", "<cmd>noh<CR>", { desc = "general clear highlights" })
 
+-- Indenting in visual mode keeps selection
+map("v", "<", "<gv")
+map("v", ">", ">gv")
+
+-- greatest remap ever
+map("x", "<leader>p", [["_dP]])
+
+-- next greatest remap ever : asbjornHaland
+map({ "n", "v" }, "<leader>y", [["+y]])
+map("n", "<leader>Y", [["+Y]])
+
+-- Split
+map("n", "<leader>-", "<C-W>s", { desc = "Split Window Below", remap = true })
+map("n", "<leader>|", "<C-W>v", { desc = "Split Window Right", remap = true })
+map("n", "<leader>wd", "<C-W>c", { desc = "Delete Window", remap = true })
 map("n", "<C-s>", "<cmd>w<CR>", { desc = "general save file" })
 
 map("n", "<leader>ch", "<cmd>NvCheatsheet<CR>", { desc = "toggle nvcheatsheet" })
@@ -113,7 +133,9 @@ end, { desc = "whichkey query lookup" })
 map("n", ";", ":", { desc = "CMD enter command mode" })
 map("i", "jk", "<ESC>")
 
------------ GIT
+--------------------
+--      GIT        -
+--------------------
 local gs = require "gitsigns"
 -- Navigation
 map("n", "]h", gs.next_hunk, { desc = "Next Hunk" })
@@ -146,10 +168,6 @@ end, { desc = "Diff this ~" })
 -- Text object
 map({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", { desc = "Gitsigns select hunk" })
 
---- end => gitsigns
-
---- start => lazygit
---- start => lazygit
 map({ "n" }, "<leader>gg", function()
   vim.fn.jobstart {
     "tmux",
@@ -164,6 +182,7 @@ map({ "n" }, "<leader>gg", function()
     "lazygit",
   }
 end, { desc = "Open lazy git" })
+
 
 -- Save / quit
 map({ "i", "x", "n", "s" }, "<C-s>", "<cmd>w<cr><esc>", { desc = "Save File" })
