@@ -11,6 +11,7 @@ local servers = {
   "eslint",
   "jsonls",
   "marksman",
+  "emmet_language_server",
 }
 
 -- protols

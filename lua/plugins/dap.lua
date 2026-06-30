@@ -1,6 +1,7 @@
 return {
   {
     "igorlfs/nvim-dap-view",
+    lazy = false,
     config = function()
       local dap_view = require "dap-view"
 
@@ -44,7 +45,7 @@ return {
         winbar = {
           show = true,
           -- You can add a "console" section to merge the terminal with the other views
-          sections = { "watches", "scopes", "exceptions", "breakpoints", "threads", "repl" },
+          sections = { "watches", "scopes", "exceptions", "breakpoints", "threads", "repl", "console", "sessions" },
           -- Must be one of the sections declared above
           default_section = "watches",
           -- Append hints with keymaps within the labels
@@ -99,6 +100,7 @@ return {
   },
   {
     "mfussenegger/nvim-dap",
+    lazy = false,
     config = function()
       local dap = require "dap"
       local widgets = require "dap.ui.widgets"
@@ -165,26 +167,50 @@ return {
       vim.keymap.set("n", "<leader>dw", function()
         widgets.hover()
       end, { desc = "Widgets" })
+      -- dap.defaults.fallback.external_terminal = {
+      --   command = "/usr/bin/tmux",
+      --   args = {
+      --     "new-window",
+      --     "-P", -- print info
+      --     "-F",
+      --     "#{window_id}", -- print only the ID
+      --     "-n",
+      --     "debug", -- temporary name
+      --   },
+      -- }
       dap.defaults.fallback.external_terminal = {
-        command = "/usr/bin/tmux",
-        args = {
-          "new-window",
-          "-P", -- print info
-          "-F",
-          "#{window_id}", -- print only the ID
-          "-n",
-          "debug", -- temporary name
-        },
+        command = "kitty",
+        args = { "--hold" },
       }
 
+      -- setup dap config by VsCode launch.json file
+      local vscode = require "dap.ext.vscode"
+      vscode.getconfigs = function(path)
+        local resolved_path = path or (vim.fn.getcwd() .. "/.vscode/nvim-launch.json")
+        if not vim.loop.fs_stat(resolved_path) then
+          return {}
+        end
+        local lines = {}
+        for line in io.lines(resolved_path) do
+          if not vim.startswith(vim.trim(line), "//") then
+            table.insert(lines, line)
+          end
+        end
+        local contents = table.concat(lines, "\n")
+        return vscode._load_json(contents)
+      end
       -----------------------------------------------------------------------
       -- Step 2: Rename the captured window once the session starts
       -----------------------------------------------------------------------
-      dap.listeners.before.launch["tmux-rename"] = function(session)
-        local name = session.config.name or "debug"
+      -- dap.listeners.before.launch["tmux-rename"] = function(session)
+      --   local name = session.config.name or "debug"
+      --
+      --   os.execute("tmux rename-window '" .. name .. "'")
+      -- end
 
-        os.execute("tmux rename-window '" .. name .. "'")
-      end
+      -----------------------------------------------------------------------
+      -- Rename easy-dotnet attach sessions from "easy-dotnet" to project name
+      -----------------------------------------------------------------------
 
       -- Handshake code
       local utils = require "dap.utils"
@@ -220,20 +246,35 @@ return {
 
       -- END Handshake
 
+      -- dap.adapters.coreclr = {
+      --   id = "coreclr",
+      --   type = "executable",
+      --   command = "/home/najmedine-mannaii/.vscode/extensions/ms-dotnettools.csharp-2.110.4-linux-x64/.debugger/vsdbg-ui",
+      --   args = { "--interpreter=vscode", "--engineLogging=/home/najmedine-mannaii/Documents/vsdbg.log" },
+      --   options = {
+      --     externalTerminal = true,
+      --   },
+      --   runInTerminal = true,
+      --   reverse_request_handlers = {
+      --     handshake = RunHandshake,
+      --   },
+      -- }
       dap.adapters.coreclr = {
         id = "coreclr",
         type = "executable",
-        command = "/home/najmedine-mannaii/.vscode/extensions/ms-dotnettools.csharp-2.93.22-linux-x64/.debugger/vsdbg-ui",
-        args = { "--interpreter=vscode", "--engineLogging=/home/najmedine-mannaii/Documents/vsdbg.log" },
+        command = "netcoredbg", -- adjust if installed elsewhere
+        args = { "--interpreter=vscode" },
         options = {
           externalTerminal = true,
         },
         runInTerminal = true,
-        reverse_request_handlers = {
-          handshake = RunHandshake,
-        },
       }
       dap.set_log_level "trace"
     end,
+  },
+  {
+    "theHamsta/nvim-dap-virtual-text",
+    lazy = false,
+    opts = {},
   },
 }

@@ -50,9 +50,6 @@ map({ "n", "x" }, "<leader>cf", function()
   require("conform").format { lsp_fallback = true }
 end, { desc = "general format file" })
 
--- global lsp mappings
-map("n", "<leader>x", vim.diagnostic.setloclist, { desc = "LSP diagnostic loclist" })
-
 -- File tree
 local function toggle_snacks_explorer()
   -- Check if explorer is open
@@ -68,6 +65,7 @@ local function toggle_snacks_explorer()
 end
 
 vim.keymap.set("n", "<leader>e", toggle_snacks_explorer, { desc = "Toggle Explorer" })
+vim.keymap.set("n", "<leader>ge", function () Snacks.picker.git_status() end, { desc = "Toggle Explorer" })
 
 -- tabufline
 if require("nvconfig").ui.tabufline.enabled then

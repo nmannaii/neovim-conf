@@ -1,5 +1,6 @@
 return {
   "stevearc/overseer.nvim",
+  lazy = false,
   config = function()
     require("overseer").setup()
     vim.keymap.set("n", "<leader>ow", "<cmd>OverseerToggle!<cr>", { desc = "Task list" })

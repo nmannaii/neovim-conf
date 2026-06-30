@@ -12,6 +12,11 @@ return {
         load = {
           ["core.integrations.nvim-cmp"] = {},
           ["core.defaults"] = {},
+          ["core.export"] = {
+            config = {
+              export_dir = "/home/najmedine-mannaii/notes/exports"
+            }
+          },
           ["core.concealer"] = {},
           ["core.dirman"] = {
             config = {

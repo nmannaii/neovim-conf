@@ -3,9 +3,10 @@ return {
     "lukas-reineke/virt-column.nvim",
     lazy = false,
     opts = {
-      char = {"|"},
+      char = { "│" },
       virtcolumn = "120",
-      highlight = {"NonText"}
+      highlight = { "NonText" },
+      exclude = { filetypes = { "dashboard" } },
     },
   },
   {
