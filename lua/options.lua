@@ -40,6 +40,7 @@ opt.updatetime = 250
 opt.timeoutlen = 300
 opt.clipboard = "unnamedplus"
 opt.undofile = true
+opt.undodir = os.getenv("HOME") .. "/.vimundo//"
 
 opt.conceallevel = 2 -- Hide * markup for bold and italic, but not markers with substitutions
 opt.confirm = true -- Confirm to save changes before exiting modified buffer

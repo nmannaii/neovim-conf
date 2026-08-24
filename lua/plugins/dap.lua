@@ -1,3 +1,7 @@
+----------------------
+---- Vscode extension download url
+---- https://ms-dotnettools.gallery.vsassets.io/_apis/public/gallery/publisher/ms-dotnettools/extension/csharp/2.148.23/assetbyname/Microsoft.VisualStudio.Services.VSIXPackage?targetPlatform=linux-x64
+---------------------
 return {
   {
     "igorlfs/nvim-dap-view",
@@ -167,21 +171,22 @@ return {
       vim.keymap.set("n", "<leader>dw", function()
         widgets.hover()
       end, { desc = "Widgets" })
-      -- dap.defaults.fallback.external_terminal = {
-      --   command = "/usr/bin/tmux",
-      --   args = {
-      --     "new-window",
-      --     "-P", -- print info
-      --     "-F",
-      --     "#{window_id}", -- print only the ID
-      --     "-n",
-      --     "debug", -- temporary name
-      --   },
-      -- }
+
       dap.defaults.fallback.external_terminal = {
-        command = "kitty",
-        args = { "--hold" },
+        command = "/usr/bin/tmux",
+        args = {
+          "new-window",
+          "-P", -- print info
+          "-F",
+          "#{window_id}", -- print only the ID
+          "-n",
+          "debug", -- temporary name
+        },
       }
+      -- dap.defaults.fallback.external_terminal = {
+      --   command = "kitty",
+      --   args = { "--hold" },
+      -- }
 
       -- setup dap config by VsCode launch.json file
       local vscode = require "dap.ext.vscode"
@@ -200,75 +205,129 @@ return {
         return vscode._load_json(contents)
       end
       -----------------------------------------------------------------------
-      -- Step 2: Rename the captured window once the session starts
-      -----------------------------------------------------------------------
-      -- dap.listeners.before.launch["tmux-rename"] = function(session)
-      --   local name = session.config.name or "debug"
+      -- OLD SETUP: vsdbg-ui (proprietary). Kept commented out for reference.
       --
-      --   os.execute("tmux rename-window '" .. name .. "'")
+      -- vsdbg-ui sends the DAP `runInTerminal` reverse request, so nvim-dap
+      -- spawned the tmux window itself via `dap.defaults.fallback.external_terminal`
+      -- (still configured above) and `tmux-rename` renamed the freshly focused
+      -- window. netcoredbg does not send `runInTerminal`, and the new adapter
+      -- below creates its tmux window detached and already named -- so the
+      -- rename listener must stay off, or it would rename nvim's own window.
+      -----------------------------------------------------------------------
+      -- -----------------------------------------------------------------------
+      -- -- Step 2: Rename the captured window once the session starts
+      -- -----------------------------------------------------------------------
+      -- dap.listeners.before.launch["tmux-rename"] = function(session)
+      -- local name = session.config.name or "debug"
+      --
+      -- os.execute("tmux rename-window '" .. name .. "'")
       -- end
-
-      -----------------------------------------------------------------------
-      -- Rename easy-dotnet attach sessions from "easy-dotnet" to project name
-      -----------------------------------------------------------------------
-
-      -- Handshake code
-      local utils = require "dap.utils"
-
-      local rpc = require "dap.rpc"
-
-      local function send_payload(client, payload)
-        local msg = rpc.msg_with_content_length(vim.json.encode(payload))
-        client.write(msg)
-      end
-
-      function RunHandshake(self, request_payload)
-        local signResult = io.popen("node ~/.config/nvim/vscode-signer.js " .. request_payload.arguments.value)
-        print(vim.inspect(signResult))
-        if signResult == nil then
-          utils.notify("error while signing handshake", vim.log.levels.ERROR)
-          return
-        end
-        local signature = signResult:read "*a"
-        signature = string.gsub(signature, "\n", "")
-        local response = {
-          type = "response",
-          seq = 0,
-          command = "handshake",
-          request_seq = request_payload.seq,
-          success = true,
-          body = {
-            signature = signature,
-          },
-        }
-        send_payload(self.client, response)
-      end
-
-      -- END Handshake
-
-      -- dap.adapters.coreclr = {
-      --   id = "coreclr",
-      --   type = "executable",
-      --   command = "/home/najmedine-mannaii/.vscode/extensions/ms-dotnettools.csharp-2.110.4-linux-x64/.debugger/vsdbg-ui",
-      --   args = { "--interpreter=vscode", "--engineLogging=/home/najmedine-mannaii/Documents/vsdbg.log" },
-      --   options = {
-      --     externalTerminal = true,
-      --   },
-      --   runInTerminal = true,
-      --   reverse_request_handlers = {
-      --     handshake = RunHandshake,
-      --   },
+      --
+      -- -- Handshake code
+      -- local rpc = require "dap.rpc"
+      --
+      -- local function send_payload(client, payload)
+      -- local msg = rpc.msg_with_content_length(vim.json.encode(payload))
+      -- client.write(msg)
+      -- end
+      --
+      -- function RunHandshake(self, request_payload)
+      -- local response = {
+      -- type = "response",
+      -- seq = 0,
+      -- command = "handshake",
+      -- request_seq = request_payload.seq,
+      -- success = true,
+      -- body = {
+      -- signature = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      -- },
       -- }
-      dap.adapters.coreclr = {
-        id = "coreclr",
-        type = "executable",
-        command = "netcoredbg", -- adjust if installed elsewhere
-        args = { "--interpreter=vscode" },
-        options = {
-          externalTerminal = true,
-        },
-        runInTerminal = true,
-      }
+      -- send_payload(self.client, response)
+      -- end
+      --
+      -- -- END Handshake
+      --
+      -- dap.adapters.coreclr = {
+      -- id = "coreclr",
+      -- type = "executable",
+      -- -- command = "/home/najmedine-mannaii/.vscode/extensions/ms-dotnettools.csharp-2.110.4-linux-x64/.debugger/vsdbg-ui",
+      -- command = "/home/najmedine-mannaii/vsdbg/vsdbg-ui",
+      -- -- command = "netcoredbg",
+      -- args = { "--interpreter=vscode", "--engineLogging=/home/najmedine-mannaii/Documents/vsdbg.log" },
+      -- options = {
+      -- externalTerminal = true,
+      -- },
+      -- runInTerminal = true,
+      -- reverse_request_handlers = {
+      -- handshake = RunHandshake,
+      -- },
+      -- }
+
+      -----------------------------------------------------------------------
+      -- netcoredbg + tmux external console
+      --
+      -- netcoredbg has no `runInTerminal` reverse request, so instead of letting
+      -- nvim-dap spawn the terminal, netcoredbg itself is started inside a new
+      -- tmux window in server mode and we connect to it over TCP. Needs a
+      -- netcoredbg built with:
+      --   --no-redirect         debuggee inherits netcoredbg's stdio, so its
+      --                         console IS that tmux window (stdin included)
+      --   --server=0            OS picks a free port -- no collisions when
+      --                         several projects are debugged at the same time
+      --   --server-port-file=F  netcoredbg reports the port it really got
+      -----------------------------------------------------------------------
+      local NETCOREDBG = vim.fn.expand "~/.netcoredbg/netcoredbg"
+
+      -- Name the tmux window after the project being debugged: the assembly from the
+      -- launch config (`Foo/bin/Debug/net8.0/Foo.dll` -> `Foo`), falling back to the
+      -- name of the cwd when the config carries no usable `program`.
+      local function project_name(config)
+        local program = type(config.program) == "string" and config.program or nil
+        if program then
+          local name = vim.fn.fnamemodify(program, ":t:r")
+          -- guard against an unexpanded `${workspaceFolder}`-style config variable
+          if name ~= "" and not name:find "%${" then
+            return name
+          end
+        end
+        return vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
+      end
+
+      dap.adapters.coreclr = function(callback, config)
+        local port_file = vim.fn.tempname()
+        local cwd = vim.fn.getcwd()
+        local win_name = project_name(config)
+
+        local cmd = string.format(
+          "%s --server=0 --server-port-file=%s --interpreter=vscode --no-redirect"
+            .. "; echo; read -p '[debug session ended, press enter] '",
+          vim.fn.shellescape(NETCOREDBG),
+          vim.fn.shellescape(port_file)
+        )
+
+        vim.fn.system { "tmux", "new-window", "-d", "-n", win_name, "-c", cwd, cmd }
+        if vim.v.shell_error ~= 0 then
+          return callback(nil, "tmux new-window failed (is nvim running inside tmux?)")
+        end
+
+        -- netcoredbg writes the port file after bind()/listen() but before accept(),
+        -- so as soon as the file exists the port is bound and waiting for us.
+        local ok = vim.wait(5000, function()
+          return vim.fn.filereadable(port_file) == 1
+        end, 50)
+        if not ok then
+          return callback(nil, "netcoredbg did not report a port -- see the '" .. win_name .. "' tmux window")
+        end
+
+        local port = tonumber(vim.fn.readfile(port_file)[1])
+        vim.fn.delete(port_file)
+        if not port then
+          return callback(nil, "could not read a port from " .. port_file)
+        end
+
+        callback { type = "server", host = "127.0.0.1", port = port }
+      end
+
       dap.set_log_level "trace"
     end,
   },

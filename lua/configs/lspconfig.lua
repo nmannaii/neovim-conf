@@ -7,7 +7,7 @@ local servers = {
   "cssls",
   "angularls",
   "lua_ls",
-  "tsgo",
+  "vtsls",
   "eslint",
   "jsonls",
   "marksman",
