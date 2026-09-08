@@ -1,6 +1,8 @@
 return {
   "coder/claudecode.nvim",
-  opts = {},
+  opts = {
+    terminal_cmd = "/home/najmedine-mannaii/.local/bin/claude-work", -- Point to local installation
+  },
   keys = {
     { "<leader>a", "", desc = "+ai", mode = { "n", "v" } },
     { "<leader>ac", "<cmd>ClaudeCode<cr>", desc = "Toggle Claude" },

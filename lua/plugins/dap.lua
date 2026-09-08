@@ -172,16 +172,13 @@ return {
         widgets.hover()
       end, { desc = "Widgets" })
 
+      -- nvim-dap spawns `command` with the debuggee's argv appended directly
+      -- (no shell), so there's no single herdr subcommand that maps onto
+      -- `tmux new-window <argv...>`. herdr-terminal.sh does it in two steps:
+      -- `herdr tab create` then `herdr pane run` with the quoted argv.
       dap.defaults.fallback.external_terminal = {
-        command = "/usr/bin/tmux",
-        args = {
-          "new-window",
-          "-P", -- print info
-          "-F",
-          "#{window_id}", -- print only the ID
-          "-n",
-          "debug", -- temporary name
-        },
+        command = vim.fn.stdpath "config" .. "/scripts/herdr-terminal.sh",
+        args = {},
       }
       -- dap.defaults.fallback.external_terminal = {
       --   command = "kitty",
@@ -208,10 +205,10 @@ return {
       -- OLD SETUP: vsdbg-ui (proprietary). Kept commented out for reference.
       --
       -- vsdbg-ui sends the DAP `runInTerminal` reverse request, so nvim-dap
-      -- spawned the tmux window itself via `dap.defaults.fallback.external_terminal`
+      -- spawned the herdr tab itself via `dap.defaults.fallback.external_terminal`
       -- (still configured above) and `tmux-rename` renamed the freshly focused
       -- window. netcoredbg does not send `runInTerminal`, and the new adapter
-      -- below creates its tmux window detached and already named -- so the
+      -- below creates its herdr tab detached and already named -- so the
       -- rename listener must stay off, or it would rename nvim's own window.
       -----------------------------------------------------------------------
       -- -----------------------------------------------------------------------
@@ -220,7 +217,7 @@ return {
       -- dap.listeners.before.launch["tmux-rename"] = function(session)
       -- local name = session.config.name or "debug"
       --
-      -- os.execute("tmux rename-window '" .. name .. "'")
+      -- herdr.pane.rename(pane_id, name) -- see herdr-terminal.sh for pane_id capture
       -- end
       --
       -- -- Handshake code
@@ -264,21 +261,21 @@ return {
       -- }
 
       -----------------------------------------------------------------------
-      -- netcoredbg + tmux external console
+      -- netcoredbg + herdr external console
       --
       -- netcoredbg has no `runInTerminal` reverse request, so instead of letting
       -- nvim-dap spawn the terminal, netcoredbg itself is started inside a new
-      -- tmux window in server mode and we connect to it over TCP. Needs a
+      -- herdr tab in server mode and we connect to it over TCP. Needs a
       -- netcoredbg built with:
       --   --no-redirect         debuggee inherits netcoredbg's stdio, so its
-      --                         console IS that tmux window (stdin included)
+      --                         console IS that herdr tab (stdin included)
       --   --server=0            OS picks a free port -- no collisions when
       --                         several projects are debugged at the same time
       --   --server-port-file=F  netcoredbg reports the port it really got
       -----------------------------------------------------------------------
       local NETCOREDBG = vim.fn.expand "~/.netcoredbg/netcoredbg"
 
-      -- Name the tmux window after the project being debugged: the assembly from the
+      -- Name the herdr tab after the project being debugged: the assembly from the
       -- launch config (`Foo/bin/Debug/net8.0/Foo.dll` -> `Foo`), falling back to the
       -- name of the cwd when the config carries no usable `program`.
       local function project_name(config)
@@ -305,9 +302,29 @@ return {
           vim.fn.shellescape(port_file)
         )
 
-        vim.fn.system { "tmux", "new-window", "-d", "-n", win_name, "-c", cwd, cmd }
+        local create_out = vim.fn.system {
+          "herdr",
+          "tab",
+          "create",
+          "--cwd",
+          cwd,
+          "--label",
+          win_name,
+          "--no-focus",
+        }
         if vim.v.shell_error ~= 0 then
-          return callback(nil, "tmux new-window failed (is nvim running inside tmux?)")
+          return callback(nil, "herdr tab create failed (is the herdr server running?): " .. create_out)
+        end
+
+        local decode_ok, decoded = pcall(vim.json.decode, create_out)
+        local pane_id = decode_ok and vim.tbl_get(decoded, "result", "root_pane", "pane_id")
+        if not pane_id then
+          return callback(nil, "herdr tab create returned no pane_id: " .. create_out)
+        end
+
+        vim.fn.system { "herdr", "pane", "run", pane_id, cmd }
+        if vim.v.shell_error ~= 0 then
+          return callback(nil, "herdr pane run failed for pane " .. pane_id)
         end
 
         -- netcoredbg writes the port file after bind()/listen() but before accept(),
@@ -316,7 +333,7 @@ return {
           return vim.fn.filereadable(port_file) == 1
         end, 50)
         if not ok then
-          return callback(nil, "netcoredbg did not report a port -- see the '" .. win_name .. "' tmux window")
+          return callback(nil, "netcoredbg did not report a port -- see the '" .. win_name .. "' herdr tab")
         end
 
         local port = tonumber(vim.fn.readfile(port_file)[1])

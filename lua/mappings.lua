@@ -7,12 +7,6 @@ map("i", "<C-l>", "<Right>", { desc = "move right" })
 map("i", "<C-j>", "<Down>", { desc = "move down" })
 map("i", "<C-k>", "<Up>", { desc = "move up" })
 
--- Better window navigation
-map("n", "<C-h>", "<C-w>h", { desc = "Go to Left Window", remap = true })
-map("n", "<C-j>", "<C-w>j", { desc = "Go to Lower Window", remap = true })
-map("n", "<C-k>", "<C-w>k", { desc = "Go to Upper Window", remap = true })
-map("n", "<C-l>", "<C-w>l", { desc = "Go to Right Window", remap = true })
-
 -- Resize window using <ctrl> arrow keys
 map("n", "<C-Up>", "<cmd>resize +2<cr>", { desc = "Increase Window Height" })
 map("n", "<C-Down>", "<cmd>resize -2<cr>", { desc = "Decrease Window Height" })
@@ -24,12 +18,21 @@ map("n", "<leader><tab>n", "<cmd>tabNext<cr>", { desc = "Next tab" })
 map("n", "<leader><tab>p", "<cmd>tabprevious<cr>", { desc = "Previous tab" })
 map("n", "<leader><tab>q", "<cmd>tabclose<cr>", { desc = "Close tab" })
 
--- Tmux
-map("n", "<C-h>", "<cmd>TmuxNavigateLeft<cr>")
-map("n", "<C-j>", "<cmd>TmuxNavigateDown<cr>")
-map("n", "<C-k>", "<cmd>TmuxNavigateUp<cr>")
-map("n", "<C-l>", "<cmd>TmuxNavigateRight<cr>")
-map("n", "<C-\\>", "<cmd>TmuxNavigatePrevious<cr>")
+-- Window navigation, falling through to the adjacent herdr pane at an edge
+-- (herdr has no "previous pane" primitive, so <C-\> stays vim-only)
+local function nav_or_herdr(wincmd_key, herdr_direction)
+  local win_before = vim.api.nvim_get_current_win()
+  vim.cmd("wincmd " .. wincmd_key)
+  if vim.api.nvim_get_current_win() == win_before then
+    vim.system { "herdr", "pane", "focus", "--direction", herdr_direction }
+  end
+end
+
+map("n", "<C-h>", function() nav_or_herdr("h", "left") end, { desc = "Go to Left Window / herdr pane" })
+map("n", "<C-j>", function() nav_or_herdr("j", "down") end, { desc = "Go to Lower Window / herdr pane" })
+map("n", "<C-k>", function() nav_or_herdr("k", "up") end, { desc = "Go to Upper Window / herdr pane" })
+map("n", "<C-l>", function() nav_or_herdr("l", "right") end, { desc = "Go to Right Window / herdr pane" })
+map("n", "<C-\\>", "<C-w>p", { desc = "Go to Previous Window", remap = true })
 
 map("n", "<Esc>", "<cmd>noh<CR>", { desc = "general clear highlights" })
 
@@ -172,19 +175,33 @@ end, { desc = "Diff this ~" })
 -- Text object
 map({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", { desc = "Gitsigns select hunk" })
 
+-- herdr has no floating-popup primitive like tmux display-popup, so this
+-- mimics it with a big split of the focused pane that closes itself once
+-- lazygit exits.
 map({ "n" }, "<leader>gg", function()
-  vim.fn.jobstart {
-    "tmux",
-    "display-popup",
-    "-d",
-    "#{pane_current_path}",
-    "-w",
-    "95%",
-    "-h",
-    "95%",
-    "-E",
-    "lazygit",
+  local split_out = vim.fn.system {
+    "herdr",
+    "pane",
+    "split",
+    "--direction",
+    "down",
+    "--ratio",
+    "0.05", -- the new pane gets the other 95%, like tmux's -h 95%
+    "--cwd",
+    vim.fn.getcwd(),
+    "--focus",
   }
+  if vim.v.shell_error ~= 0 then
+    return vim.notify("herdr pane split failed: " .. split_out, vim.log.levels.ERROR)
+  end
+
+  local ok, decoded = pcall(vim.json.decode, split_out)
+  local pane_id = ok and vim.tbl_get(decoded, "result", "pane", "pane_id")
+  if not pane_id then
+    return vim.notify("herdr pane split returned no pane_id: " .. split_out, vim.log.levels.ERROR)
+  end
+
+  vim.fn.system { "herdr", "pane", "run", pane_id, "lazygit; herdr pane close " .. pane_id }
 end, { desc = "Open lazy git" })
 
 

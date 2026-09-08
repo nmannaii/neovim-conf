@@ -17,7 +17,20 @@ return {
       local snacks = require "snacks"
       snacks.setup {
         explorer = { enabled = true },
-        picker = { enabled = true, ui_select = true },
+        picker = {
+          enabled = true,
+          ui_select = true,
+          sources = {
+            explorer = {
+              hidden = true,
+              ignored = true,
+            },
+            files = {
+              hidden = true,
+              ignored = true,
+            },
+          },
+        },
         indent = { enabled = true },
         notifier = { enabled = true },
         statuscolumn = { enabled = false },

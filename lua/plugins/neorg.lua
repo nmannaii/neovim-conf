@@ -1,42 +1,71 @@
 return {
   {
-    "nvim-neorg/neorg",
-    lazy = false, -- Disable lazy loading as some `lazy.nvim` distributions set `lazy = true` by default
-    version = "*", -- Pin Neorg to the latest stable release
-    dependencies = {
-      "nvim-neorg/tree-sitter-norg",
-      "nvim-neorg/tree-sitter-norg-meta",
-    },
+    "dhruvasagar/vim-table-mode",
+    lazy = false,
+  },
+  {
+    "jakewvincent/mkdnflow.nvim",
+    ft = { "markdown", "rmd" }, -- Add custom filetypes here if configured
+    lazy = false,
     config = function()
-      require("neorg").setup {
-        load = {
-          ["core.integrations.nvim-cmp"] = {},
-          ["core.defaults"] = {},
-          ["core.export"] = {
-            config = {
-              export_dir = "/home/najmedine-mannaii/notes/exports"
-            }
+      require("mkdnflow").setup {}
+    end,
+  },
+  {
+    "the-mayankjha/fk_markdown.nvim",
+    lazy = false,
+    config = function()
+      require("fk_markdown").setup {
+        code = {
+          enabled = true,
+
+          -- 'wide' or 'compact'
+          style = "wide",
+
+          background = {
+            enabled = false,
+            color = "#181825",
           },
-          ["core.concealer"] = {},
-          ["core.dirman"] = {
-            config = {
-              workspaces = {
-                notes = "~/notes",
-              },
-              default_workspace = "notes",
-            },
+
+          padding = {
+            top = 1,
+            bottom = 1,
+            left = 1,
+            right = 2,
           },
-          ["core.completion"] = {
-            config = {
-              engine = "nvim-cmp",
-            },
+
+          border = {
+            enabled = true,
+            type = "dynamic",
+            color = "#f38ba8",
+          },
+
+          title = {
+            enabled = true,
+            type = "dynamic",
+            color = "#a6e3a1",
+          },
+
+          icon = {
+            enabled = true,
           },
         },
       }
     end,
   },
   {
-    "dhruvasagar/vim-table-mode",
+    "echaya/neowiki.nvim",
     lazy = false,
-  }
+    opts = {
+      wiki_dirs = {
+        { name = "Notes", path = "~/notes" },
+      },
+      discover_nested_roots = true,
+    },
+    keys = {
+      { "<leader>ww", "<cmd>lua require('neowiki').open_wiki()<cr>", desc = "Open Wiki" },
+      { "<leader>wW", "<cmd>lua require('neowiki').open_wiki_floating()<cr>", desc = "Open Wiki in Floating Window" },
+      { "<leader>wT", "<cmd>lua require('neowiki').open_wiki_new_tab()<cr>", desc = "Open Wiki in Tab" },
+    },
+  },
 }

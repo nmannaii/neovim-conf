@@ -68,8 +68,6 @@ opt.tabstop = 2 -- Number of spaces tabs count for
 vim.o.cmdheight=0
 opt.wrap = false
 opt.sessionoptions = { "buffers", "curdir", "tabpages", "winsize", "help", "globals", "skiprtp", "folds" }
--- Fix markdown indentation settings
-vim.g.markdown_recommended_style = 0
 -- use Neovim nightly branch
 vim.o.fillchars = 'eob: ,fold: ,foldopen:,foldsep: ,foldinner: ,foldclose:'
 
