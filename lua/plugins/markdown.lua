@@ -88,6 +88,7 @@ return {
     keys = {
       { "<leader>cp", ft = "markdown", "<cmd>Typeset<cr>", desc = "Markdown Preview (typeset)" },
       { "<leader>ce", ft = "markdown", export, desc = "Export (pandoc, with mermaid)" },
+      { "<leader>ci", ft = "markdown", "<cmd>Typeset inline<cr>", desc = "Toggle Inline Typeset" },
       {
         "<leader>cP",
         ft = { "markdown", "typeset" },
@@ -105,7 +106,10 @@ return {
         desc = "Toggle Preview Full Width",
       },
     },
-    opts = { max_width = 400 }, -- default 120 would stop images filling a full-width preview
+    opts = {
+      max_width = 400, -- default 120 would stop images filling a full-width preview
+      -- Inline typeset stays off until toggled with <leader>ci (:Typeset inline).
+    },
   },
   {
     -- snacks.image keeps rendering images and math in documents, but not ```mermaid blocks:
