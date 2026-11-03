@@ -89,22 +89,7 @@ return {
       { "<leader>cp", ft = "markdown", "<cmd>Typeset<cr>", desc = "Markdown Preview (typeset)" },
       { "<leader>ce", ft = "markdown", export, desc = "Export (pandoc, with mermaid)" },
       { "<leader>ci", ft = "markdown", "<cmd>Typeset inline<cr>", desc = "Toggle Inline Typeset" },
-      {
-        "<leader>cP",
-        ft = { "markdown", "typeset" },
-        function()
-          for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-            if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == "typeset" then
-              local half = math.floor(vim.o.columns * 0.45)
-              -- Compared with half, not the full width: a sidebar keeps "full" below the editor's.
-              vim.api.nvim_win_set_width(win, vim.api.nvim_win_get_width(win) > half and half or vim.o.columns)
-              require("typeset.preview").schedule(0) -- render at the new width
-              return
-            end
-          end
-        end,
-        desc = "Toggle Preview Full Width",
-      },
+      { "<leader>cP", ft = "markdown", "<cmd>Typeset overlay<cr>", desc = "Markdown Preview (full screen)" },
     },
     opts = {
       max_width = 400, -- default 120 would stop images filling a full-width preview
